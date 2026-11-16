@@ -1,59 +1,32 @@
-# CryptoDocApp
+# CryptoDoc — Sistema de Cifrado Zero-Knowledge en el Navegador
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.2.21.
+Aplicación web desarrollada en **Angular (Standalone Components + TypeScript)** para el cifrado y descifrado de documentos confidenciales bajo arquitectura **Client-Side Encryption (Zero-Knowledge)**. Todo el procesamiento criptográfico se ejecuta localmente en la memoria RAM del navegador sin enviar archivos, contraseñas ni llaves privadas a servidores externos.
 
-## Development server
+---
 
-To start a local development server, run:
+## Características Principales
 
-```bash
-ng serve
-```
+### 1. Cifrado Simétrico (`AES-256-GCM + PBKDF2`)
+* **Algoritmo:** AES-256 en modo autenticado **GCM (*Galois/Counter Mode*)** mediante la API nativa `Web Crypto API` (`window.crypto.subtle`).
+* **Derivación de claves:** **PBKDF2** con `SHA-256`, *Salt* aleatorio de 16 bytes y `310,000` iteraciones.
+* **Protección de integridad:** Detección automática de manipulación de bits o contraseñas incorrectas mediante etiqueta de autenticación GCM (16 bytes).
+* **Restauración exacta:** Empaquetado binario que conserva el nombre y extensión original del documento (`.pdf`, `.docx`, `.png`, `.txt`, etc.).
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+### 2. Cifrado Asimétrico (`OpenPGP / RSA-4096`)
+* **Estándar:** Implementación compatible con **RFC 4880 (OpenPGP)** mediante `openpgp.js`, interoperable con **GnuPG y Kleopatra**.
+* **Generación de certificados:** Creación de pares de llaves **RSA-4096** en formato *ASCII Armored* (`.asc`), cálculo de huella digital (*Fingerprint*) y protección de llave privada mediante *passphrase*.
+* **Intercambio seguro:** Cifrado de documentos con llave pública (`.pgp`) y descifrado mediante llave privada y *passphrase* (compatible con archivos `.pgp` y `.gpg`).
 
-## Code scaffolding
+---
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+## Arquitectura del Proyecto
 
-```bash
-ng generate component component-name
-```
-
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
-
-```bash
-ng generate --help
-```
-
-## Building
-
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+```text
+src/app/
+├── services/
+│   ├── symmetric-crypto.ts   # Lógica AES-256-GCM y derivación PBKDF2
+│   └── openpgp.ts            # Generación RSA-4096, cifrado y descifrado OpenPGP
+├── components/
+│   ├── symmetric/            # Interfaz del módulo simétrico
+│   └── asymmetric/           # Interfaz del generador de llaves y cifrado PGP
+└── app.ts                    # Contenedor principal con navegación por señales (Signals)

@@ -1,0 +1,45 @@
+<section aria-labelledby="symmetric-heading">
+    <h2 id="symmetric-heading">Cifrado Simétrico (AES-256-GCM + PBKDF2)</h2>
+    <p>
+        Protege cualquier documento (PDF, Word, imagen, texto) con una contraseña secreta compartida.
+    </p>
+
+    <form (submit)="$event.preventDefault()">
+        <div>
+            <label for="sym-file">1. Seleccionar documento (original o archivo .enc):</label><br />
+            <input id="sym-file" type="file" (change)="onFileSelected($event)" [disabled]="isProcessing()" />
+            @if (selectedFile(); as file) {
+            <small>
+                — Archivo cargado: <strong>{{ file.name }}</strong> ({{ file.size }} bytes)</small>
+            }
+        </div>
+
+        <br />
+
+        <div>
+            <label for="sym-pass">2. Contraseña secreta (Passphrase):</label><br />
+            <input id="sym-pass" type="password" placeholder="Ingresa una contraseña fuerte" [ngModel]="password()"
+                (ngModelChange)="password.set($event)" name="password" [disabled]="isProcessing()" />
+        </div>
+
+        <br />
+
+        <div>
+            <button type="button" (click)="onEncrypt()" [disabled]="isProcessing() || !selectedFile() || !password()">
+                Cifrar y Descargar (.enc)
+            </button>
+
+            <button type="button" (click)="onDecrypt()" [disabled]="isProcessing() || !selectedFile() || !password()">
+                Descifrar y Restaurar Original
+            </button>
+        </div>
+    </form>
+
+    @if (statusMessage()) {
+    <p role="status"><strong>Estado:</strong> {{ statusMessage() }}</p>
+    }
+
+    @if (errorMessage()) {
+    <p role="alert"><strong>Error:</strong> {{ errorMessage() }}</p>
+    }
+</section>

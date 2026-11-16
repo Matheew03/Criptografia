@@ -1,1 +1,43 @@
-/* You can add global styles to this file, and also import other style files */
+:root {
+    --bg-page: #f5f6f8;
+    --bg-surface: #ffffff;
+    --bg-subtle: #f9fafb;
+    --border-color: #d8dee4;
+    --border-strong: #9ca3af;
+    --text-primary: #111827;
+    --text-secondary: #4b5563;
+    --accent-primary: #18181b;
+    --accent-hover: #27272a;
+    --accent-blue: #1d4ed8;
+    --status-bg: #ecfdf5;
+    --status-border: #a7f3d0;
+    --status-text: #065f46;
+    --error-bg: #fef2f2;
+    --error-border: #fecaca;
+    --error-text: #991b1b;
+    --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: 2.5rem 1.25rem 4rem;
+    background-color: var(--bg-page);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    font-size: 15px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+}
+
+app-root {
+    display: block;
+    max-width: 840px;
+    margin: 0 auto;
+}
