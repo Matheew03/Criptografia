@@ -1,22 +1,27 @@
 import { Component, inject, signal } from '@angular/core';
+import { DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SymmetricCryptoService } from '../../services/symmetric-crypto';
 
 @Component({
   selector: 'app-symmetric',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, DecimalPipe],
   templateUrl: './symmetric.html',
   styleUrl: './symmetric.css',
 })
 export class Symmetric {
   private readonly cryptoService = inject(SymmetricCryptoService);
 
+  readonly operation = signal<'encrypt' | 'decrypt'>('encrypt');
+  readonly showPassword = signal<boolean>(false);
+  readonly isDragging = signal<boolean>(false);
   readonly selectedFile = signal<File | null>(null);
   readonly password = signal<string>('');
   readonly isProcessing = signal<boolean>(false);
   readonly statusMessage = signal<string>('');
   readonly errorMessage = signal<string>('');
+  readonly completedFile = signal<{ blob: Blob; fileName: string } | null>(null);
 
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
@@ -24,6 +29,42 @@ export class Symmetric {
     this.selectedFile.set(file);
     this.statusMessage.set('');
     this.errorMessage.set('');
+    this.completedFile.set(null);
+  }
+
+  setOperation(operation: 'encrypt' | 'decrypt'): void {
+    this.operation.set(operation);
+    this.statusMessage.set('');
+    this.errorMessage.set('');
+    this.completedFile.set(null);
+  }
+
+  onDrop(event: DragEvent): void {
+    event.preventDefault();
+    this.isDragging.set(false);
+    const file = event.dataTransfer?.files?.[0] ?? null;
+    if (file && !this.isProcessing()) {
+      this.selectedFile.set(file);
+      this.statusMessage.set('');
+      this.errorMessage.set('');
+      this.completedFile.set(null);
+    }
+  }
+
+  onDragOver(event: DragEvent): void {
+    event.preventDefault();
+    this.isDragging.set(true);
+  }
+
+  onDragLeave(event: DragEvent): void {
+    if (!((event.currentTarget as HTMLElement).contains(event.relatedTarget as Node | null))) {
+      this.isDragging.set(false);
+    }
+  }
+
+  runOperation(): void {
+    if (this.operation() === 'encrypt') void this.onEncrypt();
+    else void this.onDecrypt();
   }
 
   async onEncrypt(): Promise<void> {
@@ -41,6 +82,7 @@ export class Symmetric {
 
     try {
       const encryptedBlob = await this.cryptoService.encryptFile(file, pass);
+      this.completedFile.set({ blob: encryptedBlob, fileName: `${file.name}.enc` });
       this.triggerDownload(encryptedBlob, `${file.name}.enc`);
       this.statusMessage.set(`Documento cifrado y descargado como "${file.name}.enc".`);
     } catch (err) {
@@ -66,6 +108,7 @@ export class Symmetric {
 
     try {
       const result = await this.cryptoService.decryptFile(file, pass);
+      this.completedFile.set({ blob: result.blob, fileName: result.fileName });
       this.triggerDownload(result.blob, result.fileName);
       this.statusMessage.set(`Documento restaurado correctamente: "${result.fileName}".`);
     } catch (err) {
@@ -74,6 +117,11 @@ export class Symmetric {
     } finally {
       this.isProcessing.set(false);
     }
+  }
+
+  downloadCompletedFile(): void {
+    const result = this.completedFile();
+    if (result) this.triggerDownload(result.blob, result.fileName);
   }
 
   private triggerDownload(blob: Blob, fileName: string): void {
