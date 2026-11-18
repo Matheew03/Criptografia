@@ -82,8 +82,6 @@
 .mini-shield { display:grid; place-items:center; width:22px; height:22px; border:1px solid rgba(155,140,255,.25); border-radius:6px; color:#b0a4ff; background:rgba(155,140,255,.08); font-size:14px; }
 .tech-row { display:flex; justify-content:space-between; align-items:center; gap:5px; padding:8px 0; border-bottom:1px solid rgba(38,52,72,.62); color:#8b9bb0; font-size:9px; }
 .tech-row code { color:#c0cbda; font:9px var(--font-mono); text-align:right; }
-.tech-foot { display:flex; align-items:center; gap:7px; margin-top:12px; color:#8394a9; font-size:9px; }
-.tech-foot .status-dot { width:5px; height:5px; }
 .spinner { width:13px; height:13px; border:2px solid rgba(54,228,218,.25); border-top-color:var(--primary); border-radius:50%; animation:spin .7s linear infinite; }
 @keyframes spin { to { transform:rotate(360deg); } }
 @media(max-width:900px) { .crypto-workspace { padding:19px; } .sym-layout { grid-template-columns:minmax(0,1fr) minmax(205px,.72fr); gap:12px; } .panel { padding:15px; } }

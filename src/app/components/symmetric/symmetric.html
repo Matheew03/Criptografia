@@ -15,7 +15,6 @@
             <span class="drop-title">Suelta tu archivo aquí</span><span class="drop-subtitle">o <strong>explora tu dispositivo</strong></span><span class="drop-hint">Cualquier tipo de documento · Procesado en memoria</span>
           }
         </label>
-        <p class="field-hint">{{ operation() === 'encrypt' ? 'El nombre y tipo del archivo se conservarán dentro del contenido cifrado.' : 'Selecciona el archivo .enc creado con CryptoDoc para restaurar el original.' }}</p>
       </section>
 
       <section class="panel config-panel" aria-labelledby="config-title">
@@ -44,7 +43,7 @@
         }
         @if (errorMessage()) { <p class="message error-message" role="alert"><b>Error</b><span>{{ errorMessage() }}</span></p> }
       </section>
-      <section class="technical-card"><div class="technical-title"><span class="mini-shield">⌑</span><span>PARÁMETROS CRIPTOGRÁFICOS</span></div><div class="tech-row"><span>Algoritmo</span><code>AES-256-GCM</code></div><div class="tech-row"><span>Derivación de clave</span><code>PBKDF2 · SHA-256</code></div><div class="tech-row"><span>Procesamiento</span><code>WEB CRYPTO API</code></div><div class="tech-foot"><span class="status-dot"></span> Operación ejecutada localmente</div></section>
+      <section class="technical-card"><div class="technical-title"><span class="mini-shield">⌑</span><span>PARÁMETROS CRIPTOGRÁFICOS</span></div><div class="tech-row"><span>Algoritmo</span><code>AES-256-GCM</code></div><div class="tech-row"><span>Derivación de clave</span><code>PBKDF2 · SHA-256</code></div><div class="tech-row"><span>Procesamiento</span><code>WEB CRYPTO API</code></div></section>
     </aside>
   </div>
 </section>
