@@ -1,178 +1,47 @@
-<section aria-labelledby="asymmetric-heading">
-    <h2 id="asymmetric-heading">Cifrado Asimétrico (Estándar OpenPGP / Kleopatra)</h2>
-    <p>Genera certificados OpenPGP e intercambia documentos cifrados con Kleopatra / GnuPG.</p>
+<section class="asym-workspace" aria-labelledby="asymmetric-heading">
+  <div class="workspace-topline"><div class="module-tag"><span class="tag-icon">02</span> OPERACIÓN ASIMÉTRICA</div><span class="algo-chip"><span class="algo-dot"></span> OPENPGP <i>·</i> RSA-4096</span></div>
+  <div class="asym-intro"><div><h2 id="asymmetric-heading">Cifrado con par de claves</h2><p>Comparte la clave pública. Conserva tu clave privada bajo tu control.</p></div><div class="key-legend"><span><i class="public-dot"></i> Pública</span><span><i class="private-dot"></i> Privada</span></div></div>
 
-    <!-- SECCIÓN 1: GENERADOR DE LLAVES -->
-    <fieldset>
-        <legend><strong>1. Generar Par de Llaves OpenPGP (.asc)</strong></legend>
+  <section class="asym-card keygen-card" aria-labelledby="keygen-title">
+    <div class="card-heading"><div class="card-icon key-icon"><svg viewBox="0 0 24 24"><circle cx="8" cy="15" r="4"/><path d="m11 12 8-8 3 3-2 2 2 2-3 3-2-2-3 3"/></svg></div><div class="heading-copy"><span class="section-index">01 / IDENTIDAD</span><h3 id="keygen-title">Generar par de claves</h3><p>Identidad OpenPGP protegida por una passphrase.</p></div><span class="card-index">01</span></div>
+    <form class="keygen-form" (submit)="$event.preventDefault()">
+      <div class="form-grid"><div class="field"><label for="pgp-name">Nombre completo <span>REQUERIDO</span></label><input id="pgp-name" type="text" placeholder="Ej. Alex Rivera" [ngModel]="name()" (ngModelChange)="name.set($event)" name="pgpName" autocomplete="name" [disabled]="isGenerating()" /></div>
+      <div class="field"><label for="pgp-email">Correo electrónico <span>REQUERIDO</span></label><input id="pgp-email" type="email" placeholder="nombre@ejemplo.com" [ngModel]="email()" (ngModelChange)="email.set($event)" name="pgpEmail" autocomplete="email" [disabled]="isGenerating()" /></div>
+      <div class="field full-field"><label for="pgp-pass">Passphrase de la clave privada <span>REQUERIDO</span></label><div class="input-wrap"><input id="pgp-pass" [type]="showKeyPassphrase() ? 'text' : 'password'" placeholder="Crea una frase secreta difícil de adivinar" [ngModel]="passphrase()" (ngModelChange)="passphrase.set($event)" name="pgpPass" autocomplete="new-password" [disabled]="isGenerating()"/><button type="button" class="reveal" (click)="showKeyPassphrase.set(!showKeyPassphrase())" [attr.aria-label]="showKeyPassphrase() ? 'Ocultar passphrase' : 'Mostrar passphrase'">{{ showKeyPassphrase() ? 'Ocultar' : 'Mostrar' }}</button></div><p class="hint">Se utiliza para proteger la clave privada. No la compartas ni la olvides.</p></div></div>
+      <button class="action-button generate-button" type="button" (click)="onGenerateKeys()" [disabled]="isGenerating() || !name() || !email() || !passphrase()"><span class="action-glyph">@if (isGenerating()) { <span class="spinner"></span> } @else { + }</span>{{ isGenerating() ? 'Generando clave RSA-4096…' : 'Generar par de claves' }}<span class="action-arrow">↗</span></button>
+    </form>
+    @if (keyGenError()) { <p class="feedback error" role="alert"><b>No se pudo generar</b>{{ keyGenError() }}</p> }
+    @if (keyPair(); as keys) {
+      <div class="generated-result" aria-live="polite"><div class="success-banner"><span>✓</span><div><strong>Par de claves generado</strong><small>{{ keys.userId }}</small></div></div>
+        <div class="fingerprint-block"><div class="fingerprint-label">HUELLA DIGITAL <span>OPENPGP</span></div><code>{{ keys.fingerprint }}</code><button type="button" (click)="copyFingerprint()" [attr.aria-label]="fingerprintCopied() ? 'Huella copiada' : 'Copiar huella digital'">{{ fingerprintCopied() ? 'Copiada ✓' : 'Copiar' }}</button></div>
+        <div class="key-downloads"><div class="key-download public-key"><span class="key-type-icon">↗</span><div><strong>Clave pública</strong><small>Para compartir con remitentes</small></div><button type="button" (click)="downloadKey('public')">Descargar .asc</button></div><div class="key-download private-key"><span class="key-type-icon">⌑</span><div><strong>Clave privada</strong><small>Guárdala en un lugar seguro</small></div><button type="button" (click)="downloadKey('private')">Descargar .asc</button></div></div>
+        <details class="public-preview"><summary>Vista previa de la clave pública</summary><textarea id="pub-preview" rows="5" readonly aria-label="Vista previa de la clave pública">{{ keys.publicKey }}</textarea></details>
+        <button class="use-keys" type="button" (click)="useGeneratedKeysForTesting()">Usar estas claves en los flujos de abajo <span>↓</span></button>
+      </div>
+    }
+  </section>
 
-        <form (submit)="$event.preventDefault()">
-            <div>
-                <label for="pgp-name">Nombre completo (User ID):</label><br />
-                <input id="pgp-name" type="text" placeholder="Ej. Mathew Castro" [ngModel]="name()"
-                    (ngModelChange)="name.set($event)" name="pgpName" [disabled]="isGenerating()" />
-            </div>
+  <div class="asym-flows">
+    <section class="asym-card flow-card" aria-labelledby="encrypt-title">
+      <div class="card-heading"><div class="card-icon public-icon"><svg viewBox="0 0 24 24"><path d="M12 3 20 6v5.5c0 4.8-3.2 8-8 9.9-4.8-1.9-8-5.1-8-9.9V6l8-3Z"/><path d="M9 11V9.8a3 3 0 0 1 6 0V11m-7 0h8v5H8v-5Z"/></svg></div><div class="heading-copy"><span class="section-index">02 / PARA ENVIAR</span><h3 id="encrypt-title">Cifrar con clave pública</h3><p>Solo el titular de la clave privada podrá abrir el archivo.</p></div></div>
+      <form (submit)="$event.preventDefault()"><div class="field"><label for="pgp-enc-file">Documento a cifrar</label><input id="pgp-enc-file" type="file" (change)="onEncryptFileSelected($event)" [disabled]="isEncrypting()"/><small class="file-selected">{{ fileToEncrypt()?.name || 'Sin documento seleccionado' }}</small></div>
+        <div class="field"><label for="pgp-pub-file">Cargar clave pública (.asc)</label><input id="pgp-pub-file" type="file" accept=".asc,.txt,.pgp,.gpg" (change)="onPublicKeyFileSelected($event)" [disabled]="isEncrypting()"/></div>
+        <div class="field"><label for="pgp-pub-text">O pega la clave pública</label><textarea id="pgp-pub-text" rows="5" placeholder="-----BEGIN PGP PUBLIC KEY BLOCK-----" [ngModel]="recipientPublicKey()" (ngModelChange)="recipientPublicKey.set($event)" name="recipientPublicKey" [disabled]="isEncrypting()" spellcheck="false"></textarea></div>
+        <button class="action-button encrypt-action" type="button" (click)="onEncryptDocument()" [disabled]="isEncrypting() || !fileToEncrypt() || !recipientPublicKey()"><span class="action-glyph">@if (isEncrypting()) { <span class="spinner"></span> } @else { ↗ }</span>{{ isEncrypting() ? 'Cifrando…' : 'Cifrar y descargar .pgp' }}</button>
+      </form>
+      @if (encryptStatus() && !isEncrypting()) { <p class="feedback success" role="status"><b>Operación completada</b>{{ encryptStatus() }}</p> } @if (encryptError()) { <p class="feedback error" role="alert"><b>Error de cifrado</b>{{ encryptError() }}</p> }
+    </section>
 
-            <br />
-
-            <div>
-                <label for="pgp-email">Correo electrónico:</label><br />
-                <input id="pgp-email" type="email" placeholder="Ej. correo@ejemplo.com" [ngModel]="email()"
-                    (ngModelChange)="email.set($event)" name="pgpEmail" [disabled]="isGenerating()" />
-            </div>
-
-            <br />
-
-            <div>
-                <label for="pgp-pass">Passphrase (protege tu llave privada):</label><br />
-                <input id="pgp-pass" type="password" placeholder="Frase secreta para desbloquear la llave"
-                    [ngModel]="passphrase()" (ngModelChange)="passphrase.set($event)" name="pgpPass"
-                    [disabled]="isGenerating()" />
-            </div>
-
-            <br />
-
-            <button type="button" (click)="onGenerateKeys()"
-                [disabled]="isGenerating() || !name() || !email() || !passphrase()">
-                {{ isGenerating() ? 'Generando par de llaves...' : 'Generar Llave Pública y Privada' }}
-            </button>
-        </form>
-
-        @if (keyGenError()) {
-        <p role="alert"><strong>Error:</strong> {{ keyGenError() }}</p>
-        }
-
-        @if (keyPair(); as keys) {
-        <hr />
-        <div>
-            <p><strong>Certificado generado:</strong> {{ keys.userId }}</p>
-            <p><strong>Huella digital (Fingerprint):</strong> <code>{{ keys.fingerprint }}</code></p>
-
-            <div>
-                <button type="button" (click)="downloadKey('public')">
-                    Descargar Llave Pública (public_key.asc)
-                </button>
-
-                <button type="button" (click)="downloadKey('private')">
-                    Descargar Llave Privada (private_key.asc)
-                </button>
-
-                <button type="button" (click)="useGeneratedKeysForTesting()">
-                    Autocompletar estas llaves abajo para probar
-                </button>
-            </div>
-
-            <br />
-
-            <div>
-                <label for="pub-preview"><strong>Vista previa Llave Pública (ASCII Armored):</strong></label><br />
-                <textarea id="pub-preview" rows="6" cols="70" readonly>{{ keys.publicKey }}</textarea>
-            </div>
-        </div>
-        }
-    </fieldset>
-
-    <br />
-
-    <!-- SECCIÓN 2: CIFRAR DOCUMENTO CON LLAVE PÚBLICA -->
-    <fieldset>
-        <legend><strong>2. Cifrar Documento (con Llave Pública del destinatario)</strong></legend>
-
-        <form (submit)="$event.preventDefault()">
-            <div>
-                <label for="pgp-enc-file">Documento a cifrar:</label><br />
-                <input id="pgp-enc-file" type="file" (change)="onEncryptFileSelected($event)"
-                    [disabled]="isEncrypting()" />
-            </div>
-
-            <br />
-
-            <div>
-                <label for="pgp-pub-file">Cargar archivo de Llave Pública (.asc) o pegarla abajo:</label><br />
-                <input id="pgp-pub-file" type="file" accept=".asc,.txt,.pgp,.gpg"
-                    (change)="onPublicKeyFileSelected($event)" [disabled]="isEncrypting()" />
-            </div>
-
-            <br />
-
-            <div>
-                <label for="pgp-pub-text">Bloque Llave Pública (-----BEGIN PGP PUBLIC KEY BLOCK-----):</label><br />
-                <textarea id="pgp-pub-text" rows="6" cols="70"
-                    placeholder="Pega aquí la llave pública exportada desde Kleopatra o generada arriba"
-                    [ngModel]="recipientPublicKey()" (ngModelChange)="recipientPublicKey.set($event)"
-                    name="recipientPublicKey" [disabled]="isEncrypting()"></textarea>
-            </div>
-
-            <br />
-
-            <button type="button" (click)="onEncryptDocument()"
-                [disabled]="isEncrypting() || !fileToEncrypt() || !recipientPublicKey()">
-                {{ isEncrypting() ? 'Cifrando...' : 'Cifrar y Descargar (.pgp)' }}
-            </button>
-        </form>
-
-        @if (encryptStatus()) {
-        <p role="status"><strong>Estado:</strong> {{ encryptStatus() }}</p>
-        }
-
-        @if (encryptError()) {
-        <p role="alert"><strong>Error:</strong> {{ encryptError() }}</p>
-        }
-    </fieldset>
-
-    <br />
-
-    <!-- SECCIÓN 3: DESCIFRAR DOCUMENTO CON LLAVE PRIVADA -->
-    <fieldset>
-        <legend><strong>3. Descifrar Documento (con tu Llave Privada)</strong></legend>
-
-        <form (submit)="$event.preventDefault()">
-            <div>
-                <label for="pgp-dec-file">Archivo cifrado (.pgp / .gpg / .asc):</label><br />
-                <input id="pgp-dec-file" type="file" (change)="onDecryptFileSelected($event)"
-                    [disabled]="isDecrypting()" />
-            </div>
-
-            <br />
-
-            <div>
-                <label for="pgp-priv-file">Cargar archivo de Llave Privada (.asc) o pegarla abajo:</label><br />
-                <input id="pgp-priv-file" type="file" accept=".asc,.txt,.pgp,.gpg"
-                    (change)="onPrivateKeyFileSelected($event)" [disabled]="isDecrypting()" />
-            </div>
-
-            <br />
-
-            <div>
-                <label for="pgp-priv-text">Bloque Llave Privada (-----BEGIN PGP PRIVATE KEY BLOCK-----):</label><br />
-                <textarea id="pgp-priv-text" rows="6" cols="70" placeholder="Pega aquí tu llave privada"
-                    [ngModel]="userPrivateKey()" (ngModelChange)="userPrivateKey.set($event)" name="userPrivateKey"
-                    [disabled]="isDecrypting()"></textarea>
-            </div>
-
-            <br />
-
-            <div>
-                <label for="pgp-dec-pass">Passphrase de la llave privada:</label><br />
-                <input id="pgp-dec-pass" type="password" placeholder="Ingresa la contraseña de tu llave privada"
-                    [ngModel]="decryptPassphrase()" (ngModelChange)="decryptPassphrase.set($event)"
-                    name="decryptPassphrase" [disabled]="isDecrypting()" />
-            </div>
-
-            <br />
-
-            <button type="button" (click)="onDecryptDocument()"
-                [disabled]="isDecrypting() || !fileToDecrypt() || !userPrivateKey() || !decryptPassphrase()">
-                {{ isDecrypting() ? 'Descifrando...' : 'Descifrar y Restaurar Documento' }}
-            </button>
-        </form>
-
-        @if (decryptStatus()) {
-        <p role="status"><strong>Estado:</strong> {{ decryptStatus() }}</p>
-        }
-
-        @if (decryptError()) {
-        <p role="alert"><strong>Error:</strong> {{ decryptError() }}</p>
-        }
-    </fieldset>
+    <section class="asym-card flow-card" aria-labelledby="decrypt-title">
+      <div class="card-heading"><div class="card-icon private-icon"><svg viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 1 1 8 0v3m-4 5v2"/></svg></div><div class="heading-copy"><span class="section-index">03 / PARA RECIBIR</span><h3 id="decrypt-title">Descifrar con clave privada</h3><p>La clave privada y passphrase permanecen en este navegador.</p></div></div>
+      <form (submit)="$event.preventDefault()"><div class="field"><label for="pgp-dec-file">Documento cifrado (.pgp / .gpg)</label><input id="pgp-dec-file" type="file" (change)="onDecryptFileSelected($event)" [disabled]="isDecrypting()"/><small class="file-selected">{{ fileToDecrypt()?.name || 'Sin archivo seleccionado' }}</small></div>
+        <div class="field"><label for="pgp-priv-file">Cargar tu clave privada (.asc)</label><input id="pgp-priv-file" type="file" accept=".asc,.txt,.pgp,.gpg" (change)="onPrivateKeyFileSelected($event)" [disabled]="isDecrypting()"/></div>
+        <div class="field"><label for="pgp-priv-text">Bloque de clave privada <span>CONTENIDO SENSIBLE</span></label><div class="secret-wrap"><textarea id="pgp-priv-text" rows="5" placeholder="-----BEGIN PGP PRIVATE KEY BLOCK-----" [class.secret-masked]="!!userPrivateKey() && !showPrivateKey()" [ngModel]="userPrivateKey()" (ngModelChange)="userPrivateKey.set($event)" name="userPrivateKey" [disabled]="isDecrypting()" spellcheck="false" autocomplete="off"></textarea><button class="secret-toggle" type="button" (click)="showPrivateKey.set(!showPrivateKey())" [attr.aria-label]="showPrivateKey() ? 'Ocultar clave privada' : 'Mostrar clave privada'">{{ showPrivateKey() ? 'Ocultar' : 'Mostrar' }}</button></div></div>
+        <div class="field"><label for="pgp-dec-pass">Passphrase de la clave</label><div class="input-wrap"><input id="pgp-dec-pass" [type]="showDecryptPassphrase() ? 'text' : 'password'" placeholder="Desbloquea tu clave privada" [ngModel]="decryptPassphrase()" (ngModelChange)="decryptPassphrase.set($event)" name="decryptPassphrase" autocomplete="current-password" [disabled]="isDecrypting()"/><button type="button" class="reveal" (click)="showDecryptPassphrase.set(!showDecryptPassphrase())" [attr.aria-label]="showDecryptPassphrase() ? 'Ocultar passphrase' : 'Mostrar passphrase'">{{ showDecryptPassphrase() ? 'Ocultar' : 'Mostrar' }}</button></div></div>
+        <button class="action-button decrypt-action" type="button" (click)="onDecryptDocument()" [disabled]="isDecrypting() || !fileToDecrypt() || !userPrivateKey() || !decryptPassphrase()"><span class="action-glyph">@if (isDecrypting()) { <span class="spinner"></span> } @else { ⌑ }</span>{{ isDecrypting() ? 'Descifrando…' : 'Descifrar y restaurar' }}</button>
+      </form>
+      @if (decryptStatus() && !isDecrypting()) { <p class="feedback success" role="status"><b>Operación completada</b>{{ decryptStatus() }}</p> } @if (decryptError()) { <p class="feedback error" role="alert"><b>Error de descifrado</b>{{ decryptError() }}</p> }
+    </section>
+  </div>
+  <aside class="key-warning"><span class="warning-mark">!</span><p><strong>Protege tu clave privada.</strong> No la compartas ni la cargues en dispositivos no confiables. La passphrase protege la clave; consérvala en un gestor seguro.</p></aside>
 </section>

@@ -19,6 +19,8 @@ export class Asymmetric {
   readonly isGenerating = signal<boolean>(false);
   readonly keyPair = signal<GeneratedKeyPair | null>(null);
   readonly keyGenError = signal<string>('');
+  readonly showKeyPassphrase = signal<boolean>(false);
+  readonly fingerprintCopied = signal<boolean>(false);
 
   // Sección 2: Cifrar con Llave Pública
   readonly fileToEncrypt = signal<File | null>(null);
@@ -30,10 +32,12 @@ export class Asymmetric {
   // Sección 3: Descifrar con Llave Privada
   readonly fileToDecrypt = signal<File | null>(null);
   readonly userPrivateKey = signal<string>('');
+  readonly showPrivateKey = signal<boolean>(false);
   readonly decryptPassphrase = signal<string>('');
   readonly isDecrypting = signal<boolean>(false);
   readonly decryptStatus = signal<string>('');
   readonly decryptError = signal<string>('');
+  readonly showDecryptPassphrase = signal<boolean>(false);
 
   async onGenerateKeys(): Promise<void> {
     const userName = this.name().trim();
@@ -67,6 +71,18 @@ export class Asymmetric {
     const fileName = type === 'public' ? 'public_key.asc' : 'private_key.asc';
 
     this.triggerDownload(new Blob([content], { type: 'text/plain;charset=utf-8' }), fileName);
+  }
+
+  async copyFingerprint(): Promise<void> {
+    const fingerprint = this.keyPair()?.fingerprint;
+    if (!fingerprint) return;
+    try {
+      await navigator.clipboard.writeText(fingerprint);
+      this.fingerprintCopied.set(true);
+      window.setTimeout(() => this.fingerprintCopied.set(false), 1800);
+    } catch {
+      this.fingerprintCopied.set(false);
+    }
   }
 
   useGeneratedKeysForTesting(): void {

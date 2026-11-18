@@ -1,45 +1,49 @@
-<section aria-labelledby="symmetric-heading">
-    <h2 id="symmetric-heading">Cifrado Simétrico (AES-256-GCM + PBKDF2)</h2>
-    <p>
-        Protege cualquier documento (PDF, Word, imagen, texto) con una contraseña secreta compartida.
-    </p>
+<section class="crypto-workspace" aria-labelledby="symmetric-heading">
+  <div class="workspace-topline"><div class="module-tag"><span class="tag-icon">01</span> OPERACIÓN SIMÉTRICA</div><span class="algo-chip"><span class="algo-dot"></span> AES-256-GCM <i>·</i> PBKDF2</span></div>
+  <div class="step-track" aria-label="Etapas de operación"><div class="step active"><span>01</span><b>Documento</b></div><span class="track-line"></span><div class="step" [class.active]="selectedFile()"><span>02</span><b>Configuración</b></div><span class="track-line"></span><div class="step" [class.active]="statusMessage() && !isProcessing()"><span>03</span><b>Resultado</b></div></div>
+  <h2 id="symmetric-heading" class="visually-hidden">Cifrado simétrico</h2>
+  <div class="sym-layout">
+    <div class="sym-main">
+      <section class="panel file-panel" aria-labelledby="file-title">
+        <div class="panel-heading"><div><span class="section-index">01 / ENTRADA</span><h3 id="file-title">Selecciona un documento</h3></div><span class="step-number">01</span></div>
+        <label class="dropzone" [class.dragging]="isDragging()" [class.has-file]="selectedFile()" (drop)="onDrop($event)" (dragover)="onDragOver($event)" (dragleave)="onDragLeave($event)">
+          <input type="file" (change)="onFileSelected($event)" [disabled]="isProcessing()" aria-label="Seleccionar documento" />
+          <span class="upload-symbol" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M4 15v4a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-4"/></svg></span>
+          @if (selectedFile(); as file) {
+            <span class="drop-title">{{ file.name }}</span><span class="drop-subtitle">{{ file.size | number }} bytes <i>·</i> Listo para {{ operation() === 'encrypt' ? 'cifrar' : 'descifrar' }}</span>
+          } @else {
+            <span class="drop-title">Suelta tu archivo aquí</span><span class="drop-subtitle">o <strong>explora tu dispositivo</strong></span><span class="drop-hint">Cualquier tipo de documento · Procesado en memoria</span>
+          }
+        </label>
+      </section>
 
-    <form (submit)="$event.preventDefault()">
-        <div>
-            <label for="sym-file">1. Seleccionar documento (original o archivo .enc):</label><br />
-            <input id="sym-file" type="file" (change)="onFileSelected($event)" [disabled]="isProcessing()" />
-            @if (selectedFile(); as file) {
-            <small>
-                — Archivo cargado: <strong>{{ file.name }}</strong> ({{ file.size }} bytes)</small>
-            }
+      <section class="panel config-panel" aria-labelledby="config-title">
+        <div class="panel-heading"><div><span class="section-index">02 / CONFIGURACIÓN</span><h3 id="config-title">Define la operación</h3></div><span class="step-number">02</span></div>
+        <div class="operation-switch" role="group" aria-label="Tipo de operación">
+          <button type="button" [class.selected]="operation() === 'encrypt'" [attr.aria-pressed]="operation() === 'encrypt'" (click)="setOperation('encrypt')"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 1 1 8 0v3"/></svg><span><b>Cifrar</b><small>Proteger documento</small></span></button>
+          <button type="button" [class.selected]="operation() === 'decrypt'" [attr.aria-pressed]="operation() === 'decrypt'" (click)="setOperation('decrypt')"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 1 1 8 0v1"/></svg><span><b>Descifrar</b><small>Restaurar original</small></span></button>
         </div>
-
-        <br />
-
-        <div>
-            <label for="sym-pass">2. Contraseña secreta (Passphrase):</label><br />
-            <input id="sym-pass" type="password" placeholder="Ingresa una contraseña fuerte" [ngModel]="password()"
-                (ngModelChange)="password.set($event)" name="password" [disabled]="isProcessing()" />
+        <div class="form-field"><div class="label-row"><label for="sym-pass">Contraseña {{ operation() === 'encrypt' ? 'secreta' : 'original' }}</label><span class="secure-label"><span></span> NO SE ALMACENA</span></div>
+          <div class="password-wrap"><input id="sym-pass" [type]="showPassword() ? 'text' : 'password'" [placeholder]="operation() === 'encrypt' ? 'Usa una frase robusta y única' : 'Ingresa la contraseña de cifrado'" [ngModel]="password()" (ngModelChange)="password.set($event)" name="password" autocomplete="off" [disabled]="isProcessing()"/><button class="visibility-toggle" type="button" (click)="showPassword.set(!showPassword())" [attr.aria-label]="showPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'">{{ showPassword() ? 'Ocultar' : 'Mostrar' }}</button></div>
+          <p class="field-hint">PBKDF2 deriva una clave a partir de tu contraseña; AES-GCM autentica los datos al descifrarlos.</p>
         </div>
+        <button class="primary-action" type="button" (click)="runOperation()" [disabled]="isProcessing() || !selectedFile() || !password()"><span class="button-icon">@if (isProcessing()) { <span class="spinner"></span> } @else { <svg viewBox="0 0 24 24"><path d="M12 3v18m-9-9h18"/></svg> }</span>{{ isProcessing() ? 'Procesando documento…' : operation() === 'encrypt' ? 'Cifrar y descargar' : 'Descifrar y restaurar' }}<span class="button-arrow">↗</span></button>
+      </section>
+    </div>
 
-        <br />
-
-        <div>
-            <button type="button" (click)="onEncrypt()" [disabled]="isProcessing() || !selectedFile() || !password()">
-                Cifrar y Descargar (.enc)
-            </button>
-
-            <button type="button" (click)="onDecrypt()" [disabled]="isProcessing() || !selectedFile() || !password()">
-                Descifrar y Restaurar Original
-            </button>
-        </div>
-    </form>
-
-    @if (statusMessage()) {
-    <p role="status"><strong>Estado:</strong> {{ statusMessage() }}</p>
-    }
-
-    @if (errorMessage()) {
-    <p role="alert"><strong>Error:</strong> {{ errorMessage() }}</p>
-    }
+    <aside class="result-column" aria-label="Resultado y detalles técnicos">
+      <section class="result-panel" aria-live="polite">
+        <div class="result-head"><span class="section-index">03 / RESULTADO</span><span class="result-mark" [class.loading]="isProcessing()">@if (isProcessing()) { <span class="spinner"></span> } @else { <span>↗</span> }</span></div>
+        @if (isProcessing()) {
+          <div class="result-empty"><span class="result-orbit"><i></i></span><h3>Operación en curso</h3><p>{{ statusMessage() }}</p><small>El navegador está procesando el archivo localmente.</small></div>
+        } @else if (statusMessage()) {
+          <div class="result-ready"><span class="success-icon">✓</span><h3>Documento listo</h3><p>{{ statusMessage() }}</p><button class="download-again" type="button" (click)="downloadCompletedFile()">Descargar resultado <span>↓</span></button><span class="download-note">La descarga también se inició automáticamente.</span></div>
+        } @else {
+          <div class="result-empty"><span class="result-orbit"><i></i></span><h3>Esperando operación</h3><p>El resultado aparecerá aquí al finalizar el proceso.</p></div>
+        }
+        @if (errorMessage()) { <p class="message error-message" role="alert"><b>Error</b><span>{{ errorMessage() }}</span></p> }
+      </section>
+      <section class="technical-card"><div class="technical-title"><span class="mini-shield">⌑</span><span>PARÁMETROS CRIPTOGRÁFICOS</span></div><div class="tech-row"><span>Algoritmo</span><code>AES-256-GCM</code></div><div class="tech-row"><span>Derivación de clave</span><code>PBKDF2 · SHA-256</code></div><div class="tech-row"><span>Procesamiento</span><code>WEB CRYPTO API</code></div></section>
+    </aside>
+  </div>
 </section>
